@@ -1,5 +1,7 @@
 package hxd.modding;
 
+import hxd.res.Loader;
+
 typedef HeapsModConfig = {
     ?modRoot:String,
     ?mods:Array<String>
@@ -7,7 +9,7 @@ typedef HeapsModConfig = {
 
 class HeapsMod
 {
-    public static var modRoot:String;
+    public static var modRoot(default, null):String;
 
     static var mods:Array<String> = [];
     static var loader:Loader;
@@ -18,10 +20,10 @@ class HeapsMod
         mods = config.mods ?? [];
 
         if (loader == null)
-            Res.loader = loader = new Loader();
+            Res.loader = loader = new Loader(new HeapsModFS(Res.loader.fs));
     }
 
-    public static function getActiveMods():Array<String>
+    public static function getEnabledMods():Array<String>
     {
         return mods.copy();
     }
