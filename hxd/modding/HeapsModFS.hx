@@ -6,7 +6,7 @@ import hxd.fs.LocalFileSystem;
 
 class HeapsModFS extends LocalFileSystem
 {
-    var baseFS:FileSystem;
+    public final baseFS:FileSystem;
 
     public function new(baseFS:FileSystem)
     {
@@ -36,8 +36,10 @@ class HeapsModFS extends LocalFileSystem
         for (mod in HeapsMod.getEnabledMods())
         {
             if (!super.exists(buildModPath(mod, path))) continue;
+
             return true;
         }
+        
         return baseFS.exists(path);
     }
 
