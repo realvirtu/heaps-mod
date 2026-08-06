@@ -1,0 +1,10 @@
+{
+    "name": "heaps-mod",
+    "url": "https://github.com/realvirtu/heaps-mod",
+    "license": "MIT",
+    "description": "Mod support for Heaps",
+    "version": "1.0.0",
+    "releasenote": "Initial release.",
+    "contributors": ["virtu"],
+    "dependencies": { "heaps": "" }
+}
