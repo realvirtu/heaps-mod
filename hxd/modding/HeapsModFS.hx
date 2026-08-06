@@ -26,8 +26,7 @@ class HeapsModFS extends LocalFileSystem
             file = buildModPath(mod, path);
         }
 
-        if (super.exists(file))
-            return super.get(file);
+        if (super.exists(file)) return super.get(file);
 
         return cast baseFS.get(file);
     }
