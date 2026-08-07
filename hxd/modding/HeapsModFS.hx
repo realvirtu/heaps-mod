@@ -7,6 +7,7 @@ import hxd.fs.LocalFileSystem;
 import hxd.modding.mod.Mod;
 
 using Lambda;
+using StringTools;
 
 class HeapsModFS extends LocalFileSystem
 {
@@ -72,7 +73,9 @@ class HeapsModFS extends LocalFileSystem
         
         meta.title ??= '';
         meta.description ??= '';
-        meta.id ??= '';
+        meta.dependencies ??= [];
+        
+        if (meta.id == null || meta.id.trim() == '') throw '$mod requires an id';
 
         return meta;
     }

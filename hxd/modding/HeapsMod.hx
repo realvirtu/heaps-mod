@@ -50,6 +50,8 @@ class HeapsMod
 
         var mod:Mod = new Mod(fs.getMeta(mod));
 
+        if (!mod.hasDependencies()) throw '${mod.mod} is missing dependencies ${mod.getMissingDependencies()}';
+
         mods.push(mod);
 
         return mod;
@@ -70,12 +72,43 @@ class HeapsMod
         if (!initialized) return [];
 
         var result:Array<ModMeta> = [];
+        var mods:Array<ModMeta> = [];
 
         for (mod in Res.loader.dir(''))
         {
             if (!fs.hasMeta(mod.name)) continue;
 
-            result.push(fs.getMeta(mod.name));
+            mods.push(fs.getMeta(mod.name));
+        }
+
+        var current:Array<String> = [];
+
+        function add(id:String)
+        {
+            var meta:ModMeta = mods.find(mod -> return mod.id == id);
+
+            if (meta == null || result.contains(meta)) return;
+
+            current.push(id);
+
+            for (dep in meta.dependencies)
+            {
+                if (dep == meta.id) throw '$id cannot depend on itself';
+                if (current.contains(dep)) throw 'Mods cannot depend on each other';
+
+                add(dep);
+            }
+
+            result.push(meta);
+
+            trace(meta.mod);
+        }
+
+        for (meta in mods)
+        {
+            current = [];
+
+            add(meta.id);
         }
 
         return result;
@@ -88,18 +121,18 @@ class HeapsMod
         return mods.copy();
     }
 
-    public static function getEnabledMod(mod:String):Mod
+    public static function getEnabledMod(id:String):Mod
     {
         if (!initialized) return null;
 
-        return getEnabledMods().find(m -> return m.mod == mod);
+        return getEnabledMods().find(m -> return m.mod == id || m.id == id);
     }
 
-    public static function hasEnabledMod(mod:String):Bool
+    public static function hasEnabledMod(id:String):Bool
     {
         if (!initialized) return false;
 
-        return getEnabledMod(mod) != null;
+        return getEnabledMod(id) != null;
     }
 
     public static function disable()
