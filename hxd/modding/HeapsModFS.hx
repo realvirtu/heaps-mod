@@ -1,6 +1,5 @@
 package hxd.modding;
 
-import haxe.io.Path;
 import hxd.fs.FileSystem;
 import hxd.fs.LocalFileSystem;
 
@@ -21,9 +20,9 @@ class HeapsModFS extends LocalFileSystem
 
         for (mod in HeapsMod.getEnabledMods())
         {
-            if (!super.exists(buildModPath(mod, path))) continue;
+            if (!exists(HeapsMod.getModPath(mod, path))) continue;
 
-            file = buildModPath(mod, path);
+            file = HeapsMod.getModPath(mod, path);
         }
 
         if (super.exists(file)) return super.get(file);
@@ -35,16 +34,11 @@ class HeapsModFS extends LocalFileSystem
     {
         for (mod in HeapsMod.getEnabledMods())
         {
-            if (!super.exists(buildModPath(mod, path))) continue;
+            if (!super.exists(HeapsMod.getModPath(mod, path))) continue;
 
             return true;
         }
-        
-        return baseFS.exists(path);
-    }
 
-    function buildModPath(mod:String, path:String):String
-    {
-        return Path.join([mod, path]);
+        return super.exists(path) || baseFS.exists(path);
     }
 }
