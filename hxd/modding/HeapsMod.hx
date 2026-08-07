@@ -46,9 +46,7 @@ class HeapsMod
 
     public static function enableMod(mod:String)
     {
-        if (!initialized || mods.contains(mod)) return;
-
-        if (!hasModMeta(mod)) throw '$mod is NOT a valid mod';
+        if (!initialized || mods.contains(mod) || !hasModMeta(mod)) return;
 
         mods.push(mod);
     }
@@ -56,7 +54,7 @@ class HeapsMod
     public static function disableMod(mod:String)
     {
         if (!initialized || !mods.contains(mod)) return;
-        
+
         mods.remove(mod);
     }
 
