@@ -75,7 +75,7 @@ class HeapsModFS extends LocalFileSystem
         meta.description ??= '';
         meta.dependencies ??= [];
         
-        if (meta.id == null || meta.id.trim() == '') throw '$mod requires an id';
+        if (meta.id == null || meta.id.trim() == '') HeapsMod.error(WARNING, MOD_MISSING_ID, 'Mod $mod lacks an ID');
 
         return meta;
     }

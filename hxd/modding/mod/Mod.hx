@@ -48,6 +48,11 @@ class Mod
         fs.dispose();
     }
 
+    public function toString():String
+    {
+        return mod;
+    }
+
     @:noCompletion
     inline function get_mod():String
     {

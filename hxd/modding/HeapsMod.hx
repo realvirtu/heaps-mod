@@ -1,6 +1,7 @@
 package hxd.modding;
 
 import hxd.modding.mod.Mod;
+import hxd.modding.HeapsModError;
 import hxd.res.Loader;
 
 using Lambda;
@@ -9,6 +10,7 @@ typedef HeapsModConfig = {
     ?modRoot:String,
     ?metaFile:String,
     ?mods:Array<String>,
+    ?onError:HeapsModError->Void,
     ?ignoredFiles:Array<String>
 }
 
@@ -22,9 +24,11 @@ class HeapsMod
     static var fs(default, null):HeapsModFS;
     static var mods(default, null):Array<Mod>;
 
+    static var onError(default, null):HeapsModError->Void;
+
     public static function init(?config:HeapsModConfig)
     {
-        if (initialized) throw 'HeapsMod has already been initialized';
+        if (initialized) return;
 
         initialized = true;
 
@@ -32,16 +36,17 @@ class HeapsMod
 
         modRoot = config.modRoot ?? 'mods';
         metaFile = config.metaFile ?? 'meta.json';
-
-        fs = new HeapsModFS(Res.loader.fs);
+        onError = config.onError;
         mods = [];
+
+        Res.loader = new Loader(fs = new HeapsModFS(Res.loader.fs));
 
         for (file in config.ignoredFiles ?? []) fs.ignoredFiles.push(file);
 
-        Res.loader = new Loader(fs);
-
         // Loads the mods specified in the config
         for (mod in config.mods ?? []) enableMod(mod);
+
+        error(DEBUG, INITIALIZED, 'HeapsMod initialized');
     }
 
     public static function enableMod(mod:String):Mod
@@ -49,10 +54,11 @@ class HeapsMod
         if (!initialized || !fs.hasMeta(mod) || hasEnabledMod(mod)) return null;
 
         var mod:Mod = new Mod(fs.getMeta(mod));
-
-        if (!mod.hasDependencies()) throw '${mod.mod} is missing dependencies ${mod.getMissingDependencies()}';
-
         mods.push(mod);
+
+        if (!mod.hasDependencies()) error(WARNING, MOD_MISSING_DEPENDENCIES, 'Mod $mod has missing dependencies ${mod.getMissingDependencies()}');
+
+        error(DEBUG, MOD_ENABLED, 'Enabled mod $mod');
 
         return mod;
     }
@@ -65,6 +71,8 @@ class HeapsMod
 
         mods.remove(mod);
         mod.dispose();
+
+        error(DEBUG, MOD_DISABLED, 'Disabled mod $mod');
     }
 
     public static function scan():Array<ModMeta>
@@ -76,7 +84,11 @@ class HeapsMod
 
         for (mod in Res.loader.dir(''))
         {
-            if (!fs.hasMeta(mod.name)) continue;
+            if (!fs.hasMeta(mod.name))
+            {
+                if (mod.entry.isDirectory) error(WARNING, MOD_MISSING_META, 'Mod ${mod.name} lacks metadata');
+                continue;
+            }
 
             mods.push(fs.getMeta(mod.name));
         }
@@ -93,15 +105,22 @@ class HeapsMod
 
             for (dep in meta.dependencies)
             {
-                if (dep == meta.id) throw '$id cannot depend on itself';
-                if (current.contains(dep)) throw 'Mods cannot depend on each other';
+                if (dep == id)
+                {
+                    error(ERROR, MOD_DEPENDENCY_ERROR, 'Mod ${meta.mod} cannot depend on itself');
+                    continue;
+                }
+
+                if (current.contains(dep))
+                {
+                    error(ERROR, MOD_DEPENDENCY_ERROR, 'Mods cannot depend on each other');
+                    continue;
+                }
 
                 add(dep);
             }
 
             result.push(meta);
-
-            trace(meta.mod);
         }
 
         for (meta in mods)
@@ -154,6 +173,11 @@ class HeapsMod
 
         fs.dispose();
         fs = null;
+    }
+
+    public static function error(code:ErrorCode, type:ErrorType, message:String)
+    {
+        if (onError != null) onError(new HeapsModError(code, type, message));
     }
 
     public static function clearCache()
