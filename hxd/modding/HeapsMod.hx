@@ -51,6 +51,8 @@ class HeapsMod
         metaFile = null;
         mods = null;
 
+        cleanCache();
+
         // If possible, replace the current filesystem with the original
         if (Res.loader.fs is HeapsModFS)
             Res.loader = new Loader(cast(Res.loader.fs, HeapsModFS).baseFS);
@@ -91,6 +93,13 @@ class HeapsMod
         }
 
         return result;
+    }
+
+    public static function cleanCache()
+    {
+        if (!(Res.loader.fs is HeapsModFS)) return;
+
+        Res.loader.cleanCache();
     }
 
     public static function getModMeta(mod:String):HeapsModMeta
