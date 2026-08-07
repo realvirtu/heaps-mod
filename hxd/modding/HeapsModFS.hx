@@ -1,8 +1,12 @@
 package hxd.modding;
 
 import haxe.io.Path;
+import haxe.Json;
 import hxd.fs.FileSystem;
 import hxd.fs.LocalFileSystem;
+import hxd.modding.mod.Mod;
+
+using Lambda;
 
 class HeapsModFS extends LocalFileSystem
 {
@@ -20,34 +24,66 @@ class HeapsModFS extends LocalFileSystem
         this.baseFS = baseFS;
     }
 
+    //
+    // MODDING
+    //
+
     override function get(path:String):LocalEntry
     {
-        var file:String = path;
-
-        if (!ignoredFiles.contains(Path.withoutDirectory(file)))
+        // Don't check mods for "path" if it's ignored
+        if (!ignoredFiles.contains(path))
         {
-            for (mod in HeapsMod.getEnabledMods())
-            {
-                if (!exists(HeapsMod.getModPath(mod, path))) continue;
+            var mods:Array<Mod> = HeapsMod.getEnabledMods();
 
-                file = HeapsMod.getModPath(mod, path);
+            for (i in 0...mods.length)
+            {
+                var mod:Mod = mods[mods.length - i - 1];
+
+                if (mod.fs.exists(path)) return mod.fs.get(path);
             }
         }
-        
-        if (super.exists(file)) return super.get(file);
 
-        return cast baseFS.get(file);
+        return cast baseFS.get(path);
     }
 
     override function exists(path:String):Bool
     {
-        for (mod in HeapsMod.getEnabledMods())
-        {
-            if (!super.exists(HeapsMod.getModPath(mod, path))) continue;
+        // Don't check mods for "path" if it's ignored
+        if (ignoredFiles.contains(path)) return baseFS.exists(path);
 
-            return true;
-        }
+        if (HeapsMod.getEnabledMods().exists(mod -> return mod.fs.exists(path))) return true;
 
-        return super.exists(path) || baseFS.exists(path);
+        return baseFS.exists(path);
+    }
+
+    //
+    // META
+    //
+
+    public function getMeta(mod:String):ModMeta
+    {
+        if (!hasMeta(mod)) return null;
+
+        var text:String = super.get(getMetaPath(mod)).getText();
+        var meta:ModMeta = try { Json.parse(text); } catch (e) null;
+
+        meta ??= {};
+        meta.mod = mod;
+        
+        meta.title ??= '';
+        meta.description ??= '';
+        meta.id ??= '';
+
+        return meta;
+    }
+
+    public function hasMeta(mod:String):Bool
+    {
+        return super.exists(getMetaPath(mod));
+    }
+
+    public function getMetaPath(mod:String):String
+    {
+        return Path.join([mod, HeapsMod.metaFile]);
     }
 }

@@ -1,8 +1,9 @@
 package hxd.modding;
 
-import haxe.io.Path;
-import haxe.Json;
+import hxd.modding.mod.Mod;
 import hxd.res.Loader;
+
+using Lambda;
 
 typedef HeapsModConfig = {
     ?modRoot:String,
@@ -13,12 +14,13 @@ typedef HeapsModConfig = {
 
 class HeapsMod
 {
+    public static var initialized(default, null):Bool;
+
     public static var modRoot(default, null):String;
+    public static var metaFile(default, null):String;
 
-    static var initialized(default, null):Bool;
-
-    static var metaFile(default, null):String;
-    static var mods(default, null):Array<String>;
+    static var fs(default, null):HeapsModFS;
+    static var mods(default, null):Array<Mod>;
 
     public static function init(?config:HeapsModConfig)
     {
@@ -30,104 +32,104 @@ class HeapsMod
 
         modRoot = config.modRoot ?? 'mods';
         metaFile = config.metaFile ?? 'meta.json';
-        mods = config.mods ?? [];
 
-        // Loads the HeapsMod filesystem
-        var fs:HeapsModFS = new HeapsModFS(Res.loader.fs);
-        var ignoredFiles:Array<String> = config.ignoredFiles ?? [];
+        fs = new HeapsModFS(Res.loader.fs);
+        mods = [];
 
-        for (file in ignoredFiles.concat([metaFile])) fs.ignoredFiles.push(file);
+        for (file in config.ignoredFiles ?? []) fs.ignoredFiles.push(file);
 
         Res.loader = new Loader(fs);
+
+        // Loads the mods specified in the config
+        for (mod in config.mods ?? []) enableMod(mod);
     }
 
-    public static function disable()
+    public static function enableMod(mod:String):Mod
     {
-        if (!initialized) return;
+        if (!initialized || !fs.hasMeta(mod) || hasEnabledMod(mod)) return null;
 
-        initialized = false;
-
-        modRoot = null;
-        metaFile = null;
-        mods = null;
-
-        cleanCache();
-
-        // If possible, replace the current filesystem with the original
-        if (Res.loader.fs is HeapsModFS)
-            Res.loader = new Loader(cast(Res.loader.fs, HeapsModFS).baseFS);
-    }
-
-    public static function enableMod(mod:String)
-    {
-        if (!initialized || mods.contains(mod) || !hasModMeta(mod)) return;
+        var mod:Mod = new Mod(fs.getMeta(mod));
 
         mods.push(mod);
+
+        return mod;
     }
 
     public static function disableMod(mod:String)
     {
-        if (!initialized || !mods.contains(mod)) return;
+        if (!hasEnabledMod(mod)) return;
+
+        var mod:Mod = getEnabledMod(mod);
 
         mods.remove(mod);
+        mod.dispose();
     }
 
-    public static function getEnabledMods():Array<String>
+    public static function scan():Array<ModMeta>
+    {
+        if (!initialized) return [];
+
+        var result:Array<ModMeta> = [];
+
+        for (mod in Res.loader.dir(''))
+        {
+            if (!fs.hasMeta(mod.name)) continue;
+
+            result.push(fs.getMeta(mod.name));
+        }
+
+        return result;
+    }
+
+    public static function getEnabledMods():Array<Mod>
     {
         if (!initialized) return [];
 
         return mods.copy();
     }
 
-    public static function scan():Array<HeapsModMeta>
+    public static function getEnabledMod(mod:String):Mod
     {
-        var result:Array<HeapsModMeta> = [];
+        if (!initialized) return null;
 
-        if (!initialized) return result;
-
-        for (file in Res.loader.dir(''))
-        {
-            if (!hasModMeta(file.name)) continue;
-
-            result.push(getModMeta(file.name));
-        }
-
-        return result;
+        return getEnabledMods().find(m -> return m.mod == mod);
     }
 
-    public static function cleanCache()
-    {
-        if (!(Res.loader.fs is HeapsModFS)) return;
-
-        Res.loader.cleanCache();
-    }
-
-    public static function getModMeta(mod:String):HeapsModMeta
-    {
-        if (!initialized || !hasModMeta(mod)) return null;
-
-        var text:String = Res.load(getModPath(mod, metaFile)).toText();
-        var meta:HeapsModMeta = try { Json.parse(text); };
-
-        meta ??= {}
-        meta.mod = mod;
-
-        meta.title ??= '';
-        meta.description ??= '';
-        meta.id ??= '';
-
-        return meta;
-    }
-
-    public static function hasModMeta(mod:String):Bool
+    public static function hasEnabledMod(mod:String):Bool
     {
         if (!initialized) return false;
 
-        return Res.loader.exists(getModPath(mod, metaFile));
+        return getEnabledMod(mod) != null;
     }
 
-    public static function getModPath(mod:String, path:String):String
+    public static function disable()
     {
-        return Path.join([mod, path]);
+        if (!initialized) return;
+
+        clearCache();
+
+        initialized = false;
+
+        modRoot = null;
+        metaFile = null;
+
+        mods = null;
+
+        // Dispose the modding filesystem
+        // Reuse the original filesystem
+        Res.loader = new Loader(fs.baseFS);
+
+        fs.dispose();
+        fs = null;
+    }
+
+    public static function clearCache()
+    {
+        if (!initialized) return;
+
+        for (mod in mods)
+            mod.clearCache();
+
+        fs.clearCache();
     }
 }
