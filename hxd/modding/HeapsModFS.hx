@@ -6,10 +6,9 @@ import hxd.fs.LocalFileSystem;
 
 class HeapsModFS extends LocalFileSystem
 {
-    static final EXCLUDES:Array<String> = [
+    public final ignoredFiles:Array<String> = [
         '.git',
-        '.vscode',
-        'meta.json'
+        '.vscode'
     ];
 
     public final baseFS:FileSystem;
@@ -25,7 +24,7 @@ class HeapsModFS extends LocalFileSystem
     {
         var file:String = path;
 
-        if (!EXCLUDES.contains(Path.withoutDirectory(file)))
+        if (!ignoredFiles.contains(Path.withoutDirectory(file)))
         {
             for (mod in HeapsMod.getEnabledMods())
             {

@@ -6,7 +6,9 @@ import hxd.res.Loader;
 
 typedef HeapsModConfig = {
     ?modRoot:String,
-    ?mods:Array<String>
+    ?metaFile:String,
+    ?mods:Array<String>,
+    ?ignoredFiles:Array<String>
 }
 
 class HeapsMod
@@ -15,6 +17,7 @@ class HeapsMod
 
     static var initialized(default, null):Bool;
 
+    static var metaFile(default, null):String;
     static var mods(default, null):Array<String>;
 
     public static function init(?config:HeapsModConfig)
@@ -26,9 +29,16 @@ class HeapsMod
         config ??= {};
 
         modRoot = config.modRoot ?? 'mods';
+        metaFile = config.metaFile ?? 'meta.json';
         mods = config.mods ?? [];
 
-        Res.loader = new Loader(new HeapsModFS(Res.loader.fs));
+        // Loads the HeapsMod filesystem
+        var fs:HeapsModFS = new HeapsModFS(Res.loader.fs);
+        var ignoredFiles:Array<String> = config.ignoredFiles ?? [];
+
+        for (file in ignoredFiles.concat([metaFile])) fs.ignoredFiles.push(file);
+
+        Res.loader = new Loader(fs);
     }
 
     public static function disable()
@@ -38,8 +48,10 @@ class HeapsMod
         initialized = false;
 
         modRoot = null;
+        metaFile = null;
         mods = null;
 
+        // If possible, replace the current filesystem with the original
         if (Res.loader.fs is HeapsModFS)
             Res.loader = new Loader(cast(Res.loader.fs, HeapsModFS).baseFS);
     }
@@ -81,16 +93,11 @@ class HeapsMod
         return result;
     }
 
-    public static function getModPath(mod:String, path:String):String
-    {
-        return Path.join([mod, path]);
-    }
-
-    static function getModMeta(mod:String):HeapsModMeta
+    public static function getModMeta(mod:String):HeapsModMeta
     {
         if (!initialized || !hasModMeta(mod)) return null;
 
-        var text:String = Res.load(getModPath(mod, 'meta.json')).toText();
+        var text:String = Res.load(getModPath(mod, metaFile)).toText();
         var meta:HeapsModMeta = try { Json.parse(text); };
 
         meta ??= {}
@@ -103,8 +110,15 @@ class HeapsMod
         return meta;
     }
 
-    static function hasModMeta(mod:String):Bool
+    public static function hasModMeta(mod:String):Bool
     {
-        return Res.loader.exists(getModPath(mod, 'meta.json'));
+        if (!initialized) return false;
+
+        return Res.loader.exists(getModPath(mod, metaFile));
+    }
+
+    public static function getModPath(mod:String, path:String):String
+    {
+        return Path.join([mod, path]);
     }
 }
