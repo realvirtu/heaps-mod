@@ -11,12 +11,16 @@ typedef HeapsModConfig = {
     ?modRoot:String,
     ?metaFile:String,
     ?mods:Array<String>,
-    ?scriptExtensions:Array<String>,
+    ?scriptExts:Array<String>,
     ?onError:HeapsModError->Void
 }
 
 class HeapsMod
 {
+    static final DEFAULT_MOD_ROOT:String = 'mods';
+    static final DEFAULT_META_FILE:String = 'meta.json';
+    static final DEFAULT_SCRIPT_EXTS:Array<String> = ['hxc'];
+
     public static var initialized(default, null):Bool;
 
     public static var modRoot(default, null):String;
@@ -35,13 +39,13 @@ class HeapsMod
 
         config ??= {};
 
-        modRoot = config.modRoot ?? 'mods';
-        metaFile = config.metaFile ?? 'meta.json';
+        modRoot = config.modRoot ?? DEFAULT_MOD_ROOT;
+        metaFile = config.metaFile ?? DEFAULT_META_FILE;
         onError = config.onError;
         mods = [];
 
         #if hxscript
-        HeapsModScript.extensions = config.scriptExtensions ?? ['hxc'];
+        HeapsModScript.extensions = config.scriptExts ?? DEFAULT_SCRIPT_EXTS;
         #end
 
         Res.loader = new Loader(fs = new HeapsModFS(Res.loader.fs));
