@@ -1,29 +1,17 @@
 package hxd.modding.script;
 
 #if hxscript
-import hxd.fs.FileEntry;
 import hxscript.types.ScriptedClass;
+import hxscript.Config;
 import hxscript.Environment;
-import hxscript.Module;
 
 using Lambda;
 
-class HeapsModScript extends Module
+class HeapsScript
 {
     public static var extensions:Array<String> = [];
 
     static var world(default, null):Environment;
-
-    public function new(entry:FileEntry)
-    {
-        onParsingError = e -> HeapsMod.error(ERROR, SCRIPT_PARSE_ERROR, e.message);
-        onProgramError = e -> HeapsMod.error(ERROR, SCRIPT_PROGRAM_ERROR, e.message);
-        onTypeError = (e, _) -> HeapsMod.error(ERROR, SCRIPT_TYPE_ERROR, e.message);
-
-        super(entry.getText(), entry.name, [], entry.path);
-
-        HeapsMod.error(DEBUG, SCRIPT_INIT, 'Loaded script ${entry.name}');
-    }
 
     public static function loadScripts()
     {
@@ -37,7 +25,7 @@ class HeapsModScript extends Module
         {
             if (!extensions.contains(file.entry.extension)) continue;
 
-            world.addModule(new HeapsModScript(file.entry));
+            world.addModule(new Script(file.entry));
         }
 
         world.start();
@@ -94,17 +82,19 @@ class HeapsModScript extends Module
         return initClass(listClasses().find(cls -> return cls.name == name), args);
     }
 
+    public static function blacklistClass(path:String)
+    {
+        Config.blacklist.set(ByModule, [path]);
+    }
+
+    public static function blacklistPackage(path:String)
+    {
+        Config.blacklist.set(ByPackage(true), [path]);
+    }
+
     public static function clearScripts()
     {
         world = null;
-    }
-}
-#else
-class HeapsModScript
-{
-    public function new()
-    {
-        trace('hxscript is required!');
     }
 }
 #end

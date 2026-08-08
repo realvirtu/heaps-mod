@@ -1,7 +1,7 @@
 package hxd.modding;
 
 import hxd.modding.mod.Mod;
-import hxd.modding.script.HeapsModScript;
+import hxd.modding.script.HeapsScript;
 import hxd.modding.HeapsModError;
 import hxd.res.Loader;
 
@@ -52,7 +52,7 @@ class HeapsMod
         onError = config.onError;
 
         #if hxscript
-        HeapsModScript.extensions = config.scriptExts ?? DEFAULT_SCRIPT_EXTS;
+        HeapsScript.extensions = config.scriptExts ?? DEFAULT_SCRIPT_EXTS;
         #end
 
         Res.loader = new Loader(fs = new HeapsModFS(Res.loader.fs));
@@ -85,7 +85,7 @@ class HeapsMod
         error(DEBUG, MOD_ENABLED, 'Enabled mod $mod');
 
         #if hxscript
-        HeapsModScript.loadScripts();
+        HeapsScript.loadScripts();
         #end
 
         return mod;
@@ -103,7 +103,7 @@ class HeapsMod
         error(DEBUG, MOD_DISABLED, 'Disabled mod $mod');
 
         #if hxscript
-        HeapsModScript.loadScripts();
+        HeapsScript.loadScripts();
         #end
     }
 
