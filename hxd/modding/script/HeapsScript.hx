@@ -82,6 +82,13 @@ class HeapsScript
         return initClass(listClasses().find(cls -> return cls.name == name), args);
     }
 
+    public static function importClass(path:String, ?alias:String)
+    {
+        alias ??= path.substring(path.lastIndexOf('.') + 1);
+
+        Config.globalImports.set(path, IAsName(alias));
+    }
+
     public static function blacklistClass(path:String)
     {
         Config.blacklist.get(ByModule).push(path);
