@@ -6,7 +6,7 @@ import hxscript.Module;
 
 using Lambda;
 
-class Script extends Module
+class HeapsModule extends Module
 {
     public function new(entry:FileEntry)
     {

@@ -25,7 +25,7 @@ class HeapsScript
         {
             if (!extensions.contains(file.entry.extension)) continue;
 
-            world.addModule(new Script(file.entry));
+            world.addModule(new HeapsModule(file.entry));
         }
 
         world.start();
@@ -84,12 +84,12 @@ class HeapsScript
 
     public static function blacklistClass(path:String)
     {
-        Config.blacklist.set(ByModule, [path]);
+        Config.blacklist.get(ByModule).push(path);
     }
 
     public static function blacklistPackage(path:String)
     {
-        Config.blacklist.set(ByPackage(true), [path]);
+        Config.blacklist.get(ByPackage(true)).push(path);
     }
 
     public static function clearScripts()
