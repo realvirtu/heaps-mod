@@ -1,5 +1,6 @@
 package hxd.modding;
 
+import hxd.fs.FileEntry;
 import haxe.io.Path;
 import haxe.Json;
 import hxd.fs.FileSystem;
@@ -11,11 +12,6 @@ using StringTools;
 
 class HeapsModFS extends LocalFileSystem
 {
-    public final ignoredFiles:Array<String> = [
-        '.git',
-        '.vscode'
-    ];
-
     public final baseFS:FileSystem;
 
     public function new(baseFS:FileSystem)
@@ -29,19 +25,47 @@ class HeapsModFS extends LocalFileSystem
     // MODDING
     //
 
+    override function dir(path:String):Array<FileEntry>
+    {
+        var result:Array<FileEntry> = baseFS.dir(path);
+        
+        for (entry in super.dir(path))
+        {
+            if (result.exists(file -> return file.path == entry.path)) continue;
+
+            result.push(entry);
+        }
+
+        for (mod in HeapsMod.getEnabledMods())
+        {
+            for (entry in mod.fs.dir(path))
+            {
+                var ogEntry:FileEntry = result.find(file -> return file.path == entry.path);
+
+                if (ogEntry != null)
+                {
+                    result.insert(result.indexOf(ogEntry), entry);
+                    result.remove(ogEntry);
+
+                    continue;
+                }
+
+                result.push(entry);
+            }
+        }
+
+        return result;
+    }
+
     override function get(path:String):LocalEntry
     {
-        // Don't check mods for "path" if it's ignored
-        if (!ignoredFiles.contains(path))
+        var mods:Array<Mod> = HeapsMod.getEnabledMods();
+
+        for (i in 0...mods.length)
         {
-            var mods:Array<Mod> = HeapsMod.getEnabledMods();
+            var mod:Mod = mods[mods.length - i - 1];
 
-            for (i in 0...mods.length)
-            {
-                var mod:Mod = mods[mods.length - i - 1];
-
-                if (mod.fs.exists(path)) return mod.fs.get(path);
-            }
+            if (mod.fs.exists(path)) return mod.fs.get(path);
         }
 
         return cast baseFS.get(path);
@@ -49,9 +73,6 @@ class HeapsModFS extends LocalFileSystem
 
     override function exists(path:String):Bool
     {
-        // Don't check mods for "path" if it's ignored
-        if (ignoredFiles.contains(path)) return baseFS.exists(path);
-
         if (HeapsMod.getEnabledMods().exists(mod -> return mod.fs.exists(path))) return true;
 
         return baseFS.exists(path);

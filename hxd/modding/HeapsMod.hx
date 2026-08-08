@@ -1,6 +1,7 @@
 package hxd.modding;
 
 import hxd.modding.mod.Mod;
+import hxd.modding.script.HeapsModScript;
 import hxd.modding.HeapsModError;
 import hxd.res.Loader;
 
@@ -10,8 +11,8 @@ typedef HeapsModConfig = {
     ?modRoot:String,
     ?metaFile:String,
     ?mods:Array<String>,
-    ?onError:HeapsModError->Void,
-    ?ignoredFiles:Array<String>
+    ?scriptExtensions:Array<String>,
+    ?onError:HeapsModError->Void
 }
 
 class HeapsMod
@@ -39,11 +40,12 @@ class HeapsMod
         onError = config.onError;
         mods = [];
 
+        #if hxscript
+        HeapsModScript.extensions = config.scriptExtensions ?? ['hxc'];
+        #end
+
         Res.loader = new Loader(fs = new HeapsModFS(Res.loader.fs));
 
-        for (file in config.ignoredFiles ?? []) fs.ignoredFiles.push(file);
-
-        // Loads the mods specified in the config
         for (mod in config.mods ?? []) enableMod(mod);
 
         error(DEBUG, INITIALIZED, 'HeapsMod initialized');
@@ -55,6 +57,10 @@ class HeapsMod
 
         var mod:Mod = new Mod(fs.getMeta(mod));
         mods.push(mod);
+
+        #if hxscript
+        HeapsModScript.loadScripts();
+        #end
 
         if (!mod.hasDependencies()) error(WARNING, MOD_MISSING_DEPENDENCIES, 'Mod $mod has missing dependencies ${mod.getMissingDependencies()}');
 
@@ -71,6 +77,10 @@ class HeapsMod
 
         mods.remove(mod);
         mod.dispose();
+
+        #if hxscript
+        HeapsModScript.loadScripts();
+        #end
 
         error(DEBUG, MOD_DISABLED, 'Disabled mod $mod');
     }
