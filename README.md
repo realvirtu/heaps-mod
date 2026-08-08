@@ -7,7 +7,7 @@ HeapsMod is a modding framework designed specifically for the [Heaps](https://he
 - Run `haxelib git heaps-mod https://github.com/realvirtu/heaps-mod`.
 - Add `-lib heaps-mod` to your hxml.
 - Script Support **(Optional)**:
-    - Run `haxelib git hxscript https://github.com/MeguminBOT/hxscript`.
+    - Run `haxelib install hxscript`.
     - Add `-lib hxscript` to your hxml.
 
 ## Usage
