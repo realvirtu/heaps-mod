@@ -4,8 +4,6 @@ package hxd.modding.script;
 import hxd.fs.FileEntry;
 import hxscript.Module;
 
-using Lambda;
-
 class HeapsModule extends Module
 {
     public function new(entry:FileEntry)
