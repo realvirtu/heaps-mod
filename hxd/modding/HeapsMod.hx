@@ -12,6 +12,8 @@ typedef HeapsModConfig = {
     ?metaFile:String,
     ?mods:Array<String>,
     ?scriptExts:Array<String>,
+    ?skipDependencies:Bool,
+    ?skipDependencyErrors:Bool,
     ?onError:HeapsModError->Void
 }
 
@@ -25,6 +27,8 @@ class HeapsMod
 
     public static var modRoot(default, null):String;
     public static var metaFile(default, null):String;
+    public static var skipDependencies(default, null):Bool;
+    public static var skipDependencyErrors(default, null):Bool;
 
     static var fs(default, null):HeapsModFS;
     static var mods(default, null):Array<Mod>;
@@ -41,8 +45,11 @@ class HeapsMod
 
         modRoot = config.modRoot ?? DEFAULT_MOD_ROOT;
         metaFile = config.metaFile ?? DEFAULT_META_FILE;
-        onError = config.onError;
+        skipDependencies = config.skipDependencies ?? false;
+        skipDependencyErrors = config.skipDependencyErrors ?? false;
+
         mods = [];
+        onError = config.onError;
 
         #if hxscript
         HeapsModScript.extensions = config.scriptExts ?? DEFAULT_SCRIPT_EXTS;
@@ -60,15 +67,26 @@ class HeapsMod
         if (!initialized || !fs.hasMeta(mod) || hasEnabledMod(mod)) return null;
 
         var mod:Mod = new Mod(fs.getMeta(mod));
+        
+        if (!mod.hasDependencies() && !skipDependencies)
+        {
+            error(ERROR, MOD_MISSING_DEPENDENCIES, 'Mod $mod has missing dependencies: ${mod.getMissingDependencies()}');
+
+            if (!skipDependencyErrors)
+            {
+                mod.dispose();
+
+                return null;
+            }
+        }
+        
         mods.push(mod);
+
+        error(DEBUG, MOD_ENABLED, 'Enabled mod $mod');
 
         #if hxscript
         HeapsModScript.loadScripts();
         #end
-
-        if (!mod.hasDependencies()) error(WARNING, MOD_MISSING_DEPENDENCIES, 'Mod $mod has missing dependencies ${mod.getMissingDependencies()}');
-
-        error(DEBUG, MOD_ENABLED, 'Enabled mod $mod');
 
         return mod;
     }
@@ -82,11 +100,11 @@ class HeapsMod
         mods.remove(mod);
         mod.dispose();
 
+        error(DEBUG, MOD_DISABLED, 'Disabled mod $mod');
+
         #if hxscript
         HeapsModScript.loadScripts();
         #end
-
-        error(DEBUG, MOD_DISABLED, 'Disabled mod $mod');
     }
 
     public static function scan():Array<ModMeta>
@@ -117,21 +135,30 @@ class HeapsMod
 
             current.push(id);
 
-            for (dep in meta.dependencies)
+            if (!skipDependencies)
             {
-                if (dep == id)
+                for (dep in meta.dependencies)
                 {
-                    error(ERROR, MOD_DEPENDENCY_ERROR, 'Mod ${meta.mod} cannot depend on itself');
-                    continue;
-                }
+                    if (dep == id)
+                    {
+                        error(ERROR, MOD_DEPENDENCY_ERROR, 'Mod ${meta.mod} cannot depend on itself');
 
-                if (current.contains(dep))
-                {
-                    error(ERROR, MOD_DEPENDENCY_ERROR, 'Mods cannot depend on each other');
-                    continue;
-                }
+                        if (!skipDependencyErrors) return;
 
-                add(dep);
+                        continue;
+                    }
+
+                    if (current.contains(dep))
+                    {
+                        error(ERROR, MOD_DEPENDENCY_ERROR, 'Mods cannot depend on each other');
+
+                        if (!skipDependencyErrors) return;
+
+                        continue;
+                    }
+
+                    add(dep);
+                }
             }
 
             result.push(meta);

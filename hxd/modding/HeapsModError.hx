@@ -18,10 +18,10 @@ enum ErrorType
     // WARNING
     MOD_MISSING_META;
     MOD_MISSING_ID;
-    MOD_MISSING_DEPENDENCIES;
-
+    
     // ERROR
     MOD_DEPENDENCY_ERROR;
+    MOD_MISSING_DEPENDENCIES;
 }
 
 class HeapsModError
