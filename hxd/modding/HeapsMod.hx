@@ -1,9 +1,12 @@
 package hxd.modding;
 
 import hxd.modding.mod.Mod;
-import hxd.modding.script.HeapsScript;
 import hxd.modding.HeapsModError;
 import hxd.res.Loader;
+
+#if hxscript
+import hxd.modding.script.HeapsScript;
+#end
 
 using Lambda;
 
