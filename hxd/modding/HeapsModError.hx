@@ -14,6 +14,7 @@ enum ErrorType
     DISABLED;
     MOD_ENABLED;
     MOD_DISABLED;
+    SCRIPT_INIT;
 
     // WARNING
     MOD_MISSING_META;
@@ -22,6 +23,9 @@ enum ErrorType
     // ERROR
     MOD_DEPENDENCY_ERROR;
     MOD_MISSING_DEPENDENCIES;
+    SCRIPT_PARSE_ERROR;
+    SCRIPT_PROGRAM_ERROR;
+    SCRIPT_TYPE_ERROR;
 }
 
 class HeapsModError

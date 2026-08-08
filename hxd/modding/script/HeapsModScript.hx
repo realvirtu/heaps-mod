@@ -2,21 +2,27 @@ package hxd.modding.script;
 
 #if hxscript
 import hxd.fs.FileEntry;
-import hxscript.Script;
+import hxscript.types.ScriptedClass;
+import hxscript.Environment;
+import hxscript.Module;
 
-class HeapsModScript extends Script
+using Lambda;
+
+class HeapsModScript extends Module
 {
     public static var extensions:Array<String> = [];
 
-    static var scripts(default, null):Array<Script> = [];
+    static var world(default, null):Environment;
 
     public function new(entry:FileEntry)
     {
-        super(entry.getText(), entry.name);
+        onParsingError = e -> HeapsMod.error(ERROR, SCRIPT_PARSE_ERROR, e.message);
+        onProgramError = e -> HeapsMod.error(ERROR, SCRIPT_PROGRAM_ERROR, e.message);
+        onTypeError = (e, _) -> HeapsMod.error(ERROR, SCRIPT_TYPE_ERROR, e.message);
 
-        scripts.push(this);
+        super(entry.getText(), entry.name, [], entry.path);
 
-        start();
+        HeapsMod.error(DEBUG, SCRIPT_INIT, 'Loaded script ${entry.name}');
     }
 
     public static function loadScripts()
@@ -25,17 +31,61 @@ class HeapsModScript extends Script
 
         clearScripts();
 
+        world = new Environment();
+
         for (file in Res.loader.dir(''))
         {
             if (!extensions.contains(file.entry.extension)) continue;
 
-            scripts.push(new HeapsModScript(file.entry));
+            world.addModule(new HeapsModScript(file.entry));
+        }
+
+        world.start();
+    }
+
+    public static function listClasses(?of:Dynamic):Array<ScriptedClass>
+    {
+        var result:Array<ScriptedClass> = [];
+
+        for (module in world.modules)
+        {
+            for (type in module.types)
+            {
+                if (type is ScriptedClass)
+                {
+                    var cls:ScriptedClass = cast type;
+
+                    if (of != null && cls.extending != of) continue;
+
+                    result.push(cls);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public static function initClass(name:String, args:Array<Dynamic>):Dynamic
+    {
+        var cls:ScriptedClass = listClasses().find(cls -> return cls.name == name);
+
+        if (cls == null) return null;
+
+        try
+        {
+            return cls.typeCreateInstance(args);
+        }
+        catch (e)
+        {
+            HeapsMod.error(ERROR, SCRIPT_PROGRAM_ERROR, e.message);
+
+            return null;
         }
     }
 
     public static function clearScripts()
     {
-        scripts = [];
+        world = null;
     }
 }
 #else
