@@ -43,7 +43,7 @@ class HeapsModScript extends Module
         world.start();
     }
 
-    public static function listClasses(?of:Dynamic):Array<ScriptedClass>
+    public static function listClasses(?base:Class<Dynamic>):Array<ScriptedClass>
     {
         var result:Array<ScriptedClass> = [];
 
@@ -54,8 +54,16 @@ class HeapsModScript extends Module
                 if (type is ScriptedClass)
                 {
                     var cls:ScriptedClass = cast type;
+                    var native:Dynamic = cls.instanceClass;
 
-                    if (of != null && cls.extending != of) continue;
+                    while (native != null)
+                    {
+                        native = Type.getSuperClass(native);
+
+                        if (native == null || native == base) break;
+                    }
+
+                    if (native != base) continue;
 
                     result.push(cls);
                 }
@@ -65,10 +73,8 @@ class HeapsModScript extends Module
         return result;
     }
 
-    public static function initClass(name:String, args:Array<Dynamic>):Dynamic
+    public static function initClass(cls:ScriptedClass, args:Array<Dynamic>):Dynamic
     {
-        var cls:ScriptedClass = listClasses().find(cls -> return cls.name == name);
-
         if (cls == null) return null;
 
         try
@@ -81,6 +87,11 @@ class HeapsModScript extends Module
 
             return null;
         }
+    }
+
+    public static function initClassByName(name:String, args:Array<Dynamic>):Dynamic
+    {
+        return initClass(listClasses().find(cls -> return cls.name == name), args);
     }
 
     public static function clearScripts()
