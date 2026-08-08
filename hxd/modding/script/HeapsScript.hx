@@ -82,7 +82,7 @@ class HeapsScript
         return initClass(listClasses().find(cls -> return cls.name == name), args);
     }
 
-    public static function importClass(path:String, ?alias:String)
+    public static function setGlobalImport(path:String, ?alias:String)
     {
         alias ??= path.substring(path.lastIndexOf('.') + 1);
 
@@ -94,9 +94,9 @@ class HeapsScript
         Config.blacklist.get(ByModule).push(path);
     }
 
-    public static function blacklistPackage(path:String)
+    public static function blacklistPackage(path:String, recursive:Bool = true)
     {
-        Config.blacklist.get(ByPackage(true)).push(path);
+        Config.blacklist.get(ByPackage(recursive)).push(path);
     }
 
     public static function clearScripts()
