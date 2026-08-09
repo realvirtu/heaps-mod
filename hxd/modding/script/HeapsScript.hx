@@ -33,6 +33,8 @@ class HeapsScript
 
     public static function listClasses(?base:Class<Dynamic>):Array<ScriptedClass>
     {
+        if (!HeapsMod.initialized) return [];
+
         var result:Array<ScriptedClass> = [];
 
         for (module in world.modules)
@@ -63,7 +65,7 @@ class HeapsScript
 
     public static function initClass(cls:ScriptedClass, args:Array<Dynamic>):Dynamic
     {
-        if (cls == null) return null;
+        if (!HeapsMod.initialized || cls == null) return null;
 
         try
         {
@@ -84,6 +86,8 @@ class HeapsScript
 
     public static function addGlobalImport(path:String, ?alias:String)
     {
+        if (!HeapsMod.initialized) return;
+
         alias ??= path.substring(path.lastIndexOf('.') + 1);
 
         Config.globalImports.set(path, IAsName(alias));
@@ -91,11 +95,15 @@ class HeapsScript
 
     public static function blacklistClass(path:String)
     {
+        if (!HeapsMod.initialized) return;
+
         Config.blacklist.get(ByModule).push(path);
     }
 
     public static function blacklistPackage(path:String, recursive:Bool = true)
     {
+        if (!HeapsMod.initialized) return;
+
         Config.blacklist.get(ByPackage(recursive)).push(path);
     }
 

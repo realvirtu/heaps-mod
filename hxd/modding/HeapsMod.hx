@@ -62,7 +62,7 @@ class HeapsMod
 
         for (mod in config.mods ?? []) enableMod(mod);
 
-        error(DEBUG, INITIALIZED, 'HeapsMod initialized');
+        error(DEBUG, HEAPSMOD_INITIALIZED, 'HeapsMod initialized');
     }
 
     public static function enableMod(mod:String):Mod
@@ -202,6 +202,10 @@ class HeapsMod
     {
         if (!initialized) return;
 
+        #if hxscript
+        HeapsScript.clearScripts();
+        #end
+
         clearCache();
 
         initialized = false;
@@ -217,6 +221,8 @@ class HeapsMod
 
         fs.dispose();
         fs = null;
+
+        error(DEBUG, HEAPSMOD_DISABLED, 'HeapsMod disabled');
     }
 
     public static function error(code:ErrorCode, type:ErrorType, message:String)

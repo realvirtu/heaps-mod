@@ -10,8 +10,8 @@ enum ErrorCode
 enum ErrorType
 {
     // DEBUG
-    INITIALIZED;
-    DISABLED;
+    HEAPSMOD_INITIALIZED;
+    HEAPSMOD_DISABLED;
     MOD_ENABLED;
     MOD_DISABLED;
     SCRIPT_INIT;
