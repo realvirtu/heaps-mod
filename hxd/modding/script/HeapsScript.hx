@@ -82,7 +82,7 @@ class HeapsScript
         return initClass(listClasses().find(cls -> return cls.name == name), args);
     }
 
-    public static function setGlobalImport(path:String, ?alias:String)
+    public static function addGlobalImport(path:String, ?alias:String)
     {
         alias ??= path.substring(path.lastIndexOf('.') + 1);
 

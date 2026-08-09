@@ -38,8 +38,14 @@ for (meta in HeapsMod.scan())
 ```haxe
 import hxd.modding.script.HeapsScript;
 
-HeapsScript.blacklistClass("DangerousClass");
+// Should be done before loading mods
+
+HeapsScript.addGlobalImport("package.Class");
+
+HeapsScript.blacklistClass("dangerous.package.DangerousClass");
 HeapsScript.blacklistPackage("dangerous.package");
+
+// Should be done after loading mods
 
 // Outputs all scripted classes
 trace(HeapsScript.listClasses());
