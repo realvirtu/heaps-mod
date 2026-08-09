@@ -53,3 +53,11 @@ trace(HeapsScript.listClasses());
 // Outputs all scripted classes that extend MyClass
 trace(HeapsScript.listClasses(MyClass));
 ```
+
+### Scripted Classes
+
+For classes to be extendable by scripted classes, they require a scripted version as done below. Although needed, scripted classes can still extend the original class.
+
+```haxe
+class ScriptedDummyClass extends DummyClass implements hxscript.IScripted {}
+```
