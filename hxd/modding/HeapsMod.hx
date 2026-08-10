@@ -14,10 +14,12 @@ typedef HeapsModConfig = {
     ?modRoot:String,
     ?metaFile:String,
     ?mods:Array<String>,
-    ?scriptExts:Array<String>,
     ?skipDependencies:Bool,
     ?skipDependencyErrors:Bool,
-    ?onError:HeapsModError->Void
+    ?onError:HeapsModError->Void,
+    #if hxscript
+    ?scriptExts:Array<String>,
+    #end
 }
 
 class HeapsMod

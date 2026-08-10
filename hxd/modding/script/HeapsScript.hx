@@ -93,6 +93,20 @@ class HeapsScript
         Config.globalImports.set(path, IAsName(alias));
     }
 
+    public static function setPreprocessor(name:String, value:String)
+    {
+        if (!HeapsMod.initialized) return;
+        
+        Config.preprocessorValues.set(name, value);
+    }
+
+    public static function removePreprocessor(name:String)
+    {
+        if (!HeapsMod.initialized) return;
+
+        Config.preprocessorValues.remove(name);
+    }
+
     public static function blacklistClass(path:String)
     {
         if (!HeapsMod.initialized) return;

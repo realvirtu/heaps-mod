@@ -1,6 +1,10 @@
 package hxd.modding.mod;
 
-using Lambda;
+#if hxscript
+import hxd.modding.script.HeapsScript;
+#end
+
+using StringTools;
 
 typedef ModMeta = {
     ?title:String,
@@ -17,6 +21,11 @@ class Mod
     public var mod(get, never):String;
     public var id(get, never):String;
 
+    #if hxscript
+    public var preprocessor(get, never):String;
+    public var hasPreprocessor(get, never):Bool;
+    #end
+
     public var fs:ModFS;
 
     public function new(meta:ModMeta)
@@ -24,6 +33,10 @@ class Mod
         this.meta = meta;
         
         fs = new ModFS(mod);
+
+        #if hxscript
+        if (hasPreprocessor) HeapsScript.setPreprocessor(preprocessor, '1');
+        #end
     }
 
     public function getMissingDependencies():Array<String>
@@ -46,6 +59,10 @@ class Mod
         clearCache();
 
         fs.dispose();
+
+        #if hxscript
+        if (hasPreprocessor) HeapsScript.removePreprocessor(preprocessor);
+        #end
     }
 
     public function toString():String
@@ -64,4 +81,18 @@ class Mod
     {
         return meta.id;
     }
+
+    #if hxscript
+    @:noCompletion
+    inline function get_preprocessor():String
+    {
+        return ~/[^A-Za-z0-9_]/g.replace(id, '_');
+    }
+
+    @:noCompletion
+    inline function get_hasPreprocessor():Bool
+    {
+        return id.trim() != '';
+    }
+    #end
 }
