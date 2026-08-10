@@ -13,10 +13,11 @@ using Lambda;
 typedef HeapsModConfig = {
     ?modRoot:String,
     ?metaFile:String,
-    ?mods:Array<String>,
+    ?apiVersion:Int,
     ?skipDependencies:Bool,
     ?skipDependencyErrors:Bool,
     ?onError:HeapsModError->Void,
+    ?mods:Array<String>,
     #if hxscript
     ?scriptExts:Array<String>,
     #end
@@ -26,19 +27,18 @@ class HeapsMod
 {
     static final DEFAULT_MOD_ROOT:String = 'mods';
     static final DEFAULT_META_FILE:String = 'meta.json';
+    
+    #if hxscript
     static final DEFAULT_SCRIPT_EXTS:Array<String> = ['hxc'];
+    #end
 
     public static var initialized(default, null):Bool;
+    public static var config(default, null):HeapsModConfig;
 
-    public static var modRoot(default, null):String;
-    public static var metaFile(default, null):String;
-    public static var skipDependencies(default, null):Bool;
-    public static var skipDependencyErrors(default, null):Bool;
+    static var mods(default, null):Array<Mod>;
+    static var onError(default, null):HeapsModError->Void;
 
     static var fs(default, null):HeapsModFS;
-    static var mods(default, null):Array<Mod>;
-
-    static var onError(default, null):HeapsModError->Void;
 
     public static function init(?config:HeapsModConfig)
     {
@@ -47,11 +47,17 @@ class HeapsMod
         initialized = true;
 
         config ??= {};
+        config.modRoot ??= DEFAULT_MOD_ROOT;
+        config.metaFile ??= DEFAULT_META_FILE;
+        config.skipDependencies ??= false;
+        config.skipDependencyErrors ??= false;
+        config.mods ??= [];
 
-        modRoot = config.modRoot ?? DEFAULT_MOD_ROOT;
-        metaFile = config.metaFile ?? DEFAULT_META_FILE;
-        skipDependencies = config.skipDependencies ?? false;
-        skipDependencyErrors = config.skipDependencyErrors ?? false;
+        #if hxscript
+        config.scriptExts ??= DEFAULT_SCRIPT_EXTS;
+        #end
+
+        HeapsMod.config = config;
 
         mods = [];
         onError = config.onError;
@@ -62,7 +68,7 @@ class HeapsMod
 
         Res.loader = new Loader(fs = new HeapsModFS(Res.loader.fs));
 
-        for (mod in config.mods ?? []) enableMod(mod);
+        for (mod in config.mods) enableMod(mod);
 
         error(DEBUG, HEAPSMOD_INITIALIZED, 'HeapsMod initialized');
     }
@@ -73,11 +79,13 @@ class HeapsMod
 
         var mod:Mod = new Mod(fs.getMeta(mod));
         
-        if (!mod.hasDependencies() && !skipDependencies)
+        if (!mod.hasDependencies() && !config.skipDependencies)
         {
-            error(ERROR, MOD_MISSING_DEPENDENCIES, 'Mod $mod has missing dependencies: ${mod.getMissingDependencies()}');
+            var deps:Array<String> = mod.getMissingDependencies().map(dep -> return dep.id);
 
-            if (!skipDependencyErrors)
+            error(ERROR, MOD_MISSING_DEPENDENCIES, 'Mod $mod has missing dependencies: $deps');
+
+            if (!config.skipDependencyErrors)
             {
                 mod.dispose();
 
@@ -135,34 +143,35 @@ class HeapsMod
         function add(id:String)
         {
             var meta:ModMeta = mods.find(mod -> return mod.id == id);
+            var valid:Bool = meta != null && (config.apiVersion == null || meta.apiVersion == config.apiVersion);
 
-            if (meta == null || result.contains(meta)) return;
+            if (!valid || result.contains(meta)) return;
 
             current.push(id);
 
-            if (!skipDependencies)
+            if (!config.skipDependencies)
             {
                 for (dep in meta.dependencies)
                 {
-                    if (dep == id)
+                    if (dep.id == id)
                     {
                         error(ERROR, MOD_DEPENDENCY_ERROR, 'Mod ${meta.mod} cannot depend on itself');
 
-                        if (!skipDependencyErrors) return;
+                        if (!config.skipDependencyErrors) return;
 
                         continue;
                     }
 
-                    if (current.contains(dep))
+                    if (current.contains(dep.id))
                     {
                         error(ERROR, MOD_DEPENDENCY_ERROR, 'Mods cannot depend on each other');
 
-                        if (!skipDependencyErrors) return;
+                        if (!config.skipDependencyErrors) return;
 
                         continue;
                     }
 
-                    add(dep);
+                    add(dep.id);
                 }
             }
 
@@ -211,9 +220,6 @@ class HeapsMod
         clearCache();
 
         initialized = false;
-
-        modRoot = null;
-        metaFile = null;
 
         mods = null;
 

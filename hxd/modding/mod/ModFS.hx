@@ -7,6 +7,6 @@ class ModFS extends LocalFileSystem
 {
     public function new(mod:String)
     {
-        super(Path.join([HeapsMod.modRoot, mod]), null);
+        super(Path.join([HeapsMod.config.modRoot, mod]), null);
     }
 }

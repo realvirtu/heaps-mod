@@ -10,8 +10,15 @@ typedef ModMeta = {
     ?title:String,
     ?description:String,
     ?id:String,
-    ?dependencies:Array<String>,
+    ?version:Int,
+    ?apiVersion:Int,
+    ?dependencies:Array<ModDependency>,
     ?mod:String
+}
+
+typedef ModDependency = {
+    ?id:String,
+    ?version:Int
 }
 
 class Mod
@@ -20,6 +27,7 @@ class Mod
 
     public var mod(get, never):String;
     public var id(get, never):String;
+    public var version(get, never):Int;
 
     #if hxscript
     public var preprocessor(get, never):String;
@@ -39,9 +47,9 @@ class Mod
         #end
     }
 
-    public function getMissingDependencies():Array<String>
+    public function getMissingDependencies():Array<ModDependency>
     {
-        return meta.dependencies.filter(dep -> return !HeapsMod.hasEnabledMod(dep));
+        return meta.dependencies.filter(dep -> return HeapsMod.getEnabledMod(dep.id)?.version != dep.version);
     }
 
     public function hasDependencies():Bool
@@ -80,6 +88,12 @@ class Mod
     inline function get_id():String
     {
         return meta.id;
+    }
+
+    @:noCompletion
+    inline function get_version():Int
+    {
+        return meta.version;
     }
 
     #if hxscript

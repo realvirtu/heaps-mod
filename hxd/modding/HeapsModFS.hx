@@ -16,7 +16,7 @@ class HeapsModFS extends LocalFileSystem
 
     public function new(baseFS:FileSystem)
     {
-        super(HeapsMod.modRoot, null);
+        super(HeapsMod.config.modRoot, null);
 
         this.baseFS = baseFS;
     }
@@ -96,7 +96,9 @@ class HeapsModFS extends LocalFileSystem
         meta.description ??= '';
         meta.dependencies ??= [];
         
-        if (meta.id == null || meta.id.trim() == '') HeapsMod.error(WARNING, MOD_MISSING_ID, 'Mod $mod lacks an ID');
+        if (meta.id == null) HeapsMod.error(WARNING, MOD_MISSING_ID, 'Mod $mod is missing "id"');
+        if (meta.version == null) HeapsMod.error(WARNING, MOD_MISSING_MOD_VERSION, 'Mod $mod is missing "version"');
+        if (meta.apiVersion == null) HeapsMod.error(WARNING, MOD_MISSING_API_VERSION, 'Mod $mod is missing "apiVersion"');
 
         return meta;
     }
@@ -108,6 +110,6 @@ class HeapsModFS extends LocalFileSystem
 
     public function getMetaPath(mod:String):String
     {
-        return Path.join([mod, HeapsMod.metaFile]);
+        return Path.join([mod, HeapsMod.config.metaFile]);
     }
 }
