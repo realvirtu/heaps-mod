@@ -13,11 +13,15 @@ class Dependency
 {
     public static function getDependencies(meta:ModMeta):Array<String>
     {
+        if (meta == null) return [];
+        
         return meta.dependencies.map(dep -> return dep.id);
     }
 
     public static function getMissingDependencies(meta:ModMeta):Array<String>
     {
+        if (meta == null) return [];
+
         return meta.dependencies.filter(dep -> return HeapsMod.getEnabledModVersion(dep.id) != dep.version).map(dep -> return dep.id);
     }
 

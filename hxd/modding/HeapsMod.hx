@@ -53,17 +53,13 @@ class HeapsMod
         config.mods ??= [];
 
         #if hxscript
-        config.scriptExts ??= DEFAULT_SCRIPT_EXTS;
+        HeapsScript.extensions = config.scriptExts ?? DEFAULT_SCRIPT_EXTS;
         #end
 
         HeapsMod.config = config;
 
         mods = [];
         onError = config.onError;
-
-        #if hxscript
-        HeapsScript.extensions = config.scriptExts ?? DEFAULT_SCRIPT_EXTS;
-        #end
 
         Res.loader = new Loader(new HeapsModFS(Res.loader.fs));
 
@@ -72,34 +68,27 @@ class HeapsMod
         error(INFO, HEAPSMOD_INITIALIZED, 'HeapsMod initialized');
     }
 
-    public static function enableMod(mod:String):Mod
+    public static function enableMod(mod:String)
     {
-        if (!initialized || !HeapsModFS.instance.hasMeta(mod) || hasEnabledMod(mod)) return null;
-
-        var mod:Mod = new Mod(HeapsModFS.instance.getMeta(mod));
-        var missing:Array<String> = Dependency.getMissingDependencies(mod.meta);
+        var meta:ModMeta = Mod.getMeta(mod, false);
+        var missing:Array<String> = Dependency.getMissingDependencies(meta);
 
         if (missing.length > 0 && !config.skipDependencies)
         {
             error(ERROR, MOD_MISSING_DEPENDENCIES, 'Mod $mod has missing dependencies: $missing');
 
-            if (!config.skipDependencyErrors)
-            {
-                mod.dispose();
-
-                return null;
-            }
+            if (!config.skipDependencyErrors) return;
         }
-        
-        mods.push(mod);
+
+        if (!initialized || meta == null || hasEnabledMod(mod)) return;
+
+        mods.push(new Mod(meta));
 
         error(INFO, MOD_ENABLED, 'Enabled mod $mod');
 
         #if hxscript
         HeapsScript.loadScripts();
         #end
-
-        return mod;
     }
 
     public static function disableMod(mod:String)
@@ -108,8 +97,8 @@ class HeapsMod
 
         var mod:Mod = getEnabledMod(mod);
 
-        mods.remove(mod);
         mod.dispose();
+        mods.remove(mod);
 
         error(INFO, MOD_DISABLED, 'Disabled mod $mod');
 
@@ -126,14 +115,16 @@ class HeapsMod
 
         for (mod in Res.loader.dir(''))
         {
-            if (HeapsModFS.instance.getMeta(mod.name) == null)
+            var meta:ModMeta = Mod.getMeta(mod.name);
+
+            if (meta == null)
             {
                 if (mod.entry.isDirectory) error(WARNING, MOD_MISSING_META, 'Mod ${mod.name} lacks metadata');
 
                 continue;
             }
             
-            result.push(HeapsModFS.instance.getMeta(mod.name));
+            result.push(meta);
         }
 
         return Dependency.sortByDependencies(result);
