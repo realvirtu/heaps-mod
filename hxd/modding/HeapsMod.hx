@@ -77,9 +77,11 @@ class HeapsMod
 
         if (missing.length > 0 && !config.skipDependencies)
         {
-            error(ERROR, MOD_MISSING_DEPENDENCIES, 'Mod $mod has missing dependencies: $missing');
+            var skipErrors:Bool = config.skipDependencyErrors;
 
-            if (!config.skipDependencyErrors) return;
+            error(skipErrors ? WARNING : ERROR, MOD_MISSING_DEPENDENCIES, 'Mod $mod has missing dependencies: $missing');
+
+            if (!skipErrors) return;
         }
 
         if (!initialized || meta == null || hasEnabledMod(mod)) return;
