@@ -133,13 +133,13 @@ class HeapsMod
 
         var result:Array<ModData> = [];
 
-        for (mod in Res.loader.dir(''))
+        for (mod in HeapsModFS.modFS.dir(''))
         {
             var meta:ModData = ModUtil.getMeta(mod.name);
 
             if (meta == null)
             {
-                if (mod.entry.isDirectory) error(WARNING, MOD_MISSING_META, 'Mod ${mod.name} lacks metadata');
+                if (mod.isDirectory) error(WARNING, MOD_MISSING_META, 'Mod ${mod.name} lacks metadata');
 
                 continue;
             }
@@ -197,9 +197,13 @@ class HeapsMod
         Res.loader = new Loader(HeapsModFS.baseFS);
 
         HeapsModFS.instance.fs.remove(HeapsModFS.baseFS);
-
         HeapsModFS.instance.dispose();
         HeapsModFS.instance = null;
+
+        HeapsModFS.modFS.dispose();
+        HeapsModFS.modFS = null;
+
+        HeapsModFS.baseFS = null;
 
         error(INFO, HEAPSMOD_DISABLED, 'HeapsMod disabled');
     }

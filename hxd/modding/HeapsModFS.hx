@@ -21,7 +21,7 @@ class HeapsModFS extends MultiFileSystem
         modFS = new LocalFileSystem(HeapsMod.config.modRoot, null);
         baseFS = fs;
 
-        super([modFS, baseFS]);
+        super([baseFS]);
     }
 
     override function dir(path:String):Array<FileEntry>
