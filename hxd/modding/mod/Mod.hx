@@ -62,7 +62,7 @@ class Mod
 
     public static function isCompatible(meta:ModMeta):Bool
     {
-        return meta != null && (meta.apiVersion == HeapsMod.config.apiVersion || HeapsMod.config.apiVersion != null);
+        return meta != null && (meta.apiVersion == HeapsMod.config.apiVersion || HeapsMod.config.apiVersion == null);
     }
 
     public function toString():String
