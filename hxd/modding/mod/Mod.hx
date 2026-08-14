@@ -1,8 +1,6 @@
 package hxd.modding.mod;
 
-import haxe.io.Path;
-import haxe.Json;
-import hxd.modding.mod.Dependency.DependencyData;
+import hxd.modding.data.ModData;
 
 #if hxscript
 import hxd.modding.script.HeapsScript;
@@ -10,19 +8,9 @@ import hxd.modding.script.HeapsScript;
 
 using StringTools;
 
-typedef ModMeta = {
-    ?title:String,
-    ?description:String,
-    ?id:String,
-    ?version:Int,
-    ?apiVersion:Int,
-    ?dependencies:Array<DependencyData>,
-    ?mod:String
-}
-
 class Mod
 {
-    public final meta:ModMeta;
+    public final meta:ModData;
 
     public var mod(get, never):String;
     public var id(get, never):String;
@@ -35,7 +23,7 @@ class Mod
 
     public var fs:ModFS;
 
-    public function new(meta:ModMeta)
+    public function new(meta:ModData)
     {
         this.meta = meta;
         
@@ -64,40 +52,6 @@ class Mod
         #if hxscript
         if (hasPreprocessor) HeapsScript.removePreprocessor(preprocessor);
         #end
-    }
-
-    public static function getMeta(mod:String, skipWarnings:Bool = true):ModMeta
-    {
-        var meta:ModMeta = null;
-
-        try
-        {
-            var text:String = HeapsModFS.modFS.get(Path.join([mod, HeapsMod.config.metaFile])).getText();
-
-            meta = Json.parse(text);
-
-            meta ??= {};
-            meta.mod = mod;
-            
-            meta.title ??= '';
-            meta.description ??= '';
-            meta.dependencies ??= [];
-        }
-        catch (e) return null;
-        
-        if (!skipWarnings)
-        {
-            if (meta.id == null) HeapsMod.error(WARNING, MOD_MISSING_ID, 'Mod $mod is missing "id"');
-            if (meta.version == null) HeapsMod.error(WARNING, MOD_MISSING_MOD_VERSION, 'Mod $mod is missing "version"');
-            if (meta.apiVersion == null) HeapsMod.error(WARNING, MOD_MISSING_API_VERSION, 'Mod $mod is missing "apiVersion"');
-        }
-
-        return meta;
-    }
-
-    public static function isCompatible(meta:ModMeta):Bool
-    {
-        return meta != null && (meta.apiVersion == HeapsMod.config.apiVersion || HeapsMod.config.apiVersion == null);
     }
 
     public function toString():String

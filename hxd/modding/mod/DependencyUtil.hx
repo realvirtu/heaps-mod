@@ -1,40 +1,35 @@
 package hxd.modding.mod;
 
-import hxd.modding.mod.Mod.ModMeta;
+import hxd.modding.data.ModData;
 
 using Lambda;
 
-typedef DependencyData = {
-    ?id:String,
-    ?version:Int
-}
-
-class Dependency
+class DependencyUtil
 {
-    public static function getDependencies(meta:ModMeta):Array<String>
+    public static function getDependencies(meta:ModData):Array<String>
     {
         if (meta == null) return [];
         
         return meta.dependencies.map(dep -> return dep.id);
     }
 
-    public static function getMissingDependencies(meta:ModMeta):Array<String>
+    public static function getMissingDependencies(meta:ModData):Array<String>
     {
         if (meta == null) return [];
 
         return meta.dependencies.filter(dep -> return HeapsMod.getEnabledModVersion(dep.id) != dep.version).map(dep -> return dep.id);
     }
 
-    public static function sortByDependencies(mods:Array<ModMeta>):Array<ModMeta>
+    public static function sortByDependencies(mods:Array<ModData>):Array<ModData>
     {
-        var result:Array<ModMeta> = [];
+        var result:Array<ModData> = [];
         var checked:Array<String> = [];
 
         function add(id:String)
         {
-            var meta:ModMeta = mods.find(mod -> return mod.id == id);
+            var meta:ModData = mods.find(mod -> return mod.id == id);
 
-            if (!Mod.isCompatible(meta) || result.contains(meta)) return;
+            if (!ModUtil.isCompatible(meta) || result.contains(meta)) return;
 
             checked.push(id);
 

@@ -1,6 +1,8 @@
 package hxd.modding;
 
-import hxd.modding.mod.Dependency;
+import hxd.modding.data.ModData;
+import hxd.modding.mod.DependencyUtil;
+import hxd.modding.mod.ModUtil;
 import hxd.modding.mod.Mod;
 import hxd.modding.HeapsModError;
 import hxd.res.Loader;
@@ -70,8 +72,8 @@ class HeapsMod
 
     public static function enableMod(mod:String)
     {
-        var meta:ModMeta = Mod.getMeta(mod, false);
-        var missing:Array<String> = Dependency.getMissingDependencies(meta);
+        var meta:ModData = ModUtil.getMeta(mod, false);
+        var missing:Array<String> = DependencyUtil.getMissingDependencies(meta);
 
         if (missing.length > 0 && !config.skipDependencies)
         {
@@ -107,15 +109,15 @@ class HeapsMod
         #end
     }
 
-    public static function scan():Array<ModMeta>
+    public static function scan():Array<ModData>
     {
         if (!initialized) return [];
 
-        var result:Array<ModMeta> = [];
+        var result:Array<ModData> = [];
 
         for (mod in Res.loader.dir(''))
         {
-            var meta:ModMeta = Mod.getMeta(mod.name);
+            var meta:ModData = ModUtil.getMeta(mod.name);
 
             if (meta == null)
             {
@@ -127,7 +129,7 @@ class HeapsMod
             result.push(meta);
         }
 
-        return Dependency.sortByDependencies(result);
+        return DependencyUtil.sortByDependencies(result);
     }
 
     public static function getEnabledMods():Array<Mod>
