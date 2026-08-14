@@ -1,5 +1,7 @@
 package hxd.modding.mod;
 
+import hxd.modding.mod.Dependency.DependencyData;
+
 #if hxscript
 import hxd.modding.script.HeapsScript;
 #end
@@ -12,13 +14,8 @@ typedef ModMeta = {
     ?id:String,
     ?version:Int,
     ?apiVersion:Int,
-    ?dependencies:Array<ModDependency>,
+    ?dependencies:Array<DependencyData>,
     ?mod:String
-}
-
-typedef ModDependency = {
-    ?id:String,
-    ?version:Int
 }
 
 class Mod
@@ -47,16 +44,6 @@ class Mod
         #end
     }
 
-    public function getMissingDependencies():Array<ModDependency>
-    {
-        return meta.dependencies.filter(dep -> return HeapsMod.getEnabledMod(dep.id)?.version != dep.version);
-    }
-
-    public function hasDependencies():Bool
-    {
-        return getMissingDependencies().length == 0;
-    }
-
     public function clearCache()
     {
         fs.clearCache();
@@ -71,6 +58,11 @@ class Mod
         #if hxscript
         if (hasPreprocessor) HeapsScript.removePreprocessor(preprocessor);
         #end
+    }
+
+    public static function isCompatible(meta:ModMeta):Bool
+    {
+        return meta != null && (meta.apiVersion == HeapsMod.config.apiVersion || HeapsMod.config.apiVersion != null);
     }
 
     public function toString():String

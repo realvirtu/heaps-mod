@@ -84,17 +84,25 @@ class HeapsModFS extends LocalFileSystem
 
     public function getMeta(mod:String):ModMeta
     {
-        if (!hasMeta(mod)) return null;
+        var meta:ModMeta = null;
 
-        var text:String = super.get(getMetaPath(mod)).getText();
-        var meta:ModMeta = try { Json.parse(text); } catch (e) null;
+        try
+        {
+            var text:String = super.get(getMetaPath(mod)).getText();
 
-        meta ??= {};
-        meta.mod = mod;
-        
-        meta.title ??= '';
-        meta.description ??= '';
-        meta.dependencies ??= [];
+            meta = Json.parse(text);
+
+            meta ??= {};
+            meta.mod = mod;
+            
+            meta.title ??= '';
+            meta.description ??= '';
+            meta.dependencies ??= [];
+        }
+        catch (e)
+        {
+            return null;
+        }
         
         if (meta.id == null) HeapsMod.error(WARNING, MOD_MISSING_ID, 'Mod $mod is missing "id"');
         if (meta.version == null) HeapsMod.error(WARNING, MOD_MISSING_MOD_VERSION, 'Mod $mod is missing "version"');

@@ -1,5 +1,6 @@
 package hxd.modding;
 
+import hxd.modding.mod.Dependency;
 import hxd.modding.mod.Mod;
 import hxd.modding.HeapsModError;
 import hxd.res.Loader;
@@ -78,12 +79,11 @@ class HeapsMod
         if (!initialized || !fs.hasMeta(mod) || hasEnabledMod(mod)) return null;
 
         var mod:Mod = new Mod(fs.getMeta(mod));
-        
-        if (!mod.hasDependencies() && !config.skipDependencies)
-        {
-            var deps:Array<String> = mod.getMissingDependencies().map(dep -> return dep.id);
+        var missing:Array<String> = Dependency.getMissingDependencies(mod.meta);
 
-            error(ERROR, MOD_MISSING_DEPENDENCIES, 'Mod $mod has missing dependencies: $deps');
+        if (missing.length > 0 && !config.skipDependencies)
+        {
+            error(ERROR, MOD_MISSING_DEPENDENCIES, 'Mod $mod has missing dependencies: $missing');
 
             if (!config.skipDependencyErrors)
             {
@@ -125,67 +125,20 @@ class HeapsMod
         if (!initialized) return [];
 
         var result:Array<ModMeta> = [];
-        var mods:Array<ModMeta> = [];
 
         for (mod in Res.loader.dir(''))
         {
-            if (!fs.hasMeta(mod.name))
+            if (fs.getMeta(mod.name) == null)
             {
                 if (mod.entry.isDirectory) error(WARNING, MOD_MISSING_META, 'Mod ${mod.name} lacks metadata');
+
                 continue;
             }
-
-            mods.push(fs.getMeta(mod.name));
+            
+            result.push(fs.getMeta(mod.name));
         }
 
-        var current:Array<String> = [];
-
-        function add(id:String)
-        {
-            var meta:ModMeta = mods.find(mod -> return mod.id == id);
-            var valid:Bool = meta != null && (config.apiVersion == null || meta.apiVersion == config.apiVersion);
-
-            if (!valid || result.contains(meta)) return;
-
-            current.push(id);
-
-            if (!config.skipDependencies)
-            {
-                for (dep in meta.dependencies)
-                {
-                    if (dep.id == id)
-                    {
-                        error(ERROR, MOD_DEPENDENCY_ERROR, 'Mod ${meta.mod} cannot depend on itself');
-
-                        if (!config.skipDependencyErrors) return;
-
-                        continue;
-                    }
-
-                    if (current.contains(dep.id))
-                    {
-                        error(ERROR, MOD_DEPENDENCY_ERROR, 'Mods cannot depend on each other');
-
-                        if (!config.skipDependencyErrors) return;
-
-                        continue;
-                    }
-
-                    add(dep.id);
-                }
-            }
-
-            result.push(meta);
-        }
-
-        for (meta in mods)
-        {
-            current = [];
-
-            add(meta.id);
-        }
-
-        return result;
+        return Dependency.sortByDependencies(result);
     }
 
     public static function getEnabledMods():Array<Mod>
@@ -200,6 +153,13 @@ class HeapsMod
         if (!initialized) return null;
 
         return getEnabledMods().find(m -> return m.mod == id || m.id == id);
+    }
+
+    public static function getEnabledModVersion(id:String):Null<Int>
+    {
+        if (!initialized) return null;
+
+        return getEnabledMod(id)?.version;
     }
 
     public static function hasEnabledMod(id:String):Bool

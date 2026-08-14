@@ -33,7 +33,7 @@ class HeapsScript
 
     public static function listClasses(?base:Class<Dynamic>):Array<ScriptedClass>
     {
-        if (!HeapsMod.initialized) return [];
+        if (!HeapsMod.initialized || world == null) return [];
 
         var result:Array<ScriptedClass> = [];
 
