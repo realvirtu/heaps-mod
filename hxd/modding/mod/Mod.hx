@@ -1,5 +1,7 @@
 package hxd.modding.mod;
 
+import haxe.io.Path;
+import hxd.fs.LocalFileSystem;
 import hxd.modding.data.ModData;
 
 #if hxscript
@@ -21,13 +23,13 @@ class Mod
     public var hasPreprocessor(get, never):Bool;
     #end
 
-    public var fs:ModFS;
+    public var fs(default, null):LocalFileSystem;
 
     public function new(meta:ModData)
     {
         this.meta = meta;
         
-        fs = new ModFS(mod);
+        fs = new LocalFileSystem(Path.join([HeapsMod.config.modRoot, mod]), null);
 
         HeapsModFS.instance.fs.insert(0, fs);
 
