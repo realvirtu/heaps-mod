@@ -71,7 +71,7 @@ class HeapsMod
 
         for (mod in config.mods) enableMod(mod);
 
-        error(DEBUG, HEAPSMOD_INITIALIZED, 'HeapsMod initialized');
+        error(INFO, HEAPSMOD_INITIALIZED, 'HeapsMod initialized');
     }
 
     public static function enableMod(mod:String):Mod
@@ -95,7 +95,7 @@ class HeapsMod
         
         mods.push(mod);
 
-        error(DEBUG, MOD_ENABLED, 'Enabled mod $mod');
+        error(INFO, MOD_ENABLED, 'Enabled mod $mod');
 
         #if hxscript
         HeapsScript.loadScripts();
@@ -113,7 +113,7 @@ class HeapsMod
         mods.remove(mod);
         mod.dispose();
 
-        error(DEBUG, MOD_DISABLED, 'Disabled mod $mod');
+        error(INFO, MOD_DISABLED, 'Disabled mod $mod');
 
         #if hxscript
         HeapsScript.loadScripts();
@@ -190,7 +190,7 @@ class HeapsMod
         fs.dispose();
         fs = null;
 
-        error(DEBUG, HEAPSMOD_DISABLED, 'HeapsMod disabled');
+        error(INFO, HEAPSMOD_DISABLED, 'HeapsMod disabled');
     }
 
     public static function error(code:ErrorCode, type:ErrorType, message:String)

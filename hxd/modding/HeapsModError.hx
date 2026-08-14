@@ -2,14 +2,14 @@ package hxd.modding;
 
 enum ErrorCode
 {
-    DEBUG;
+    INFO;
     WARNING;
     ERROR;
 }
 
 enum ErrorType
 {
-    // DEBUG
+    // INFO
     HEAPSMOD_INITIALIZED;
     HEAPSMOD_DISABLED;
     MOD_ENABLED;

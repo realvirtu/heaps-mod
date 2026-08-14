@@ -14,7 +14,7 @@ class HeapsModule extends Module
 
         super(entry.getText(), entry.name, [], entry.path);
 
-        HeapsMod.error(DEBUG, SCRIPT_INIT, 'Loaded script ${entry.name}');
+        HeapsMod.error(INFO, SCRIPT_INIT, 'Loaded script ${entry.name}');
     }
 }
 #end
