@@ -65,50 +65,66 @@ class HeapsMod
 
         Res.loader = new Loader(new HeapsModFS(Res.loader.fs));
 
-        for (mod in config.mods) enableMod(mod);
+        enableMods(config.mods);
 
         error(INFO, HEAPSMOD_INITIALIZED, 'HeapsMod initialized');
     }
 
     public static function enableMod(mod:String)
     {
-        var meta:ModData = ModUtil.getMeta(mod, false);
-        var missing:Array<String> = DependencyUtil.getMissingDependencies(meta);
+        enableMods([mod]);
+    }
 
-        if (missing.length > 0 && !config.skipDependencies)
+    public static function disableMod(mod:String)
+    {
+        disableMods([mod]);
+    }
+
+    public static function enableMods(dirs:Array<String>)
+    {
+        if (!initialized) return;
+        
+        for (mod in dirs)
         {
-            var skipErrors:Bool = config.skipDependencyErrors;
+            var meta:ModData = ModUtil.getMeta(mod, false);
+            var missing:Array<String> = DependencyUtil.getMissingDependencies(meta);
 
-            error(skipErrors ? WARNING : ERROR, MOD_MISSING_DEPENDENCIES, 'Mod $mod has missing dependencies: $missing');
+            if (missing.length > 0 && !config.skipDependencies)
+            {
+                var skipErrors:Bool = config.skipDependencyErrors;
 
-            if (!skipErrors) return;
+                error(skipErrors ? WARNING : ERROR, MOD_MISSING_DEPENDENCIES, 'Mod $mod has missing dependencies: $missing');
+
+                if (!skipErrors) continue;
+            }
+
+            if (meta == null || hasEnabledMod(mod)) continue;
+
+            mods.push(new Mod(meta));
+
+            error(INFO, MOD_ENABLED, 'Enabled mod $mod');
         }
-
-        if (!initialized || meta == null || hasEnabledMod(mod)) return;
-
-        mods.push(new Mod(meta));
-
-        error(INFO, MOD_ENABLED, 'Enabled mod $mod');
 
         #if hxscript
         HeapsScript.loadScripts();
         #end
     }
 
-    public static function disableMod(mod:String)
+    public static function disableMods(dirs:Array<String>)
     {
-        if (!hasEnabledMod(mod)) return;
+        if (!initialized) return;
 
-        var mod:Mod = getEnabledMod(mod);
+        for (mod in dirs)
+        {
+            var mod:Mod = getEnabledMod(mod);
+            mod.dispose();
 
-        mod.dispose();
-        mods.remove(mod);
+            mods.remove(mod);
 
-        error(INFO, MOD_DISABLED, 'Disabled mod $mod');
+            error(INFO, MOD_DISABLED, 'Disabled mod $mod');
+        }
 
-        #if hxscript
-        HeapsScript.loadScripts();
-        #end
+        enableMods(getEnabledMods().map(mod -> return mod.mod));
     }
 
     public static function scan():Array<ModData>
