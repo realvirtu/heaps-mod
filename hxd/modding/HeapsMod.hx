@@ -39,8 +39,6 @@ class HeapsMod
     static var mods(default, null):Array<Mod>;
     static var onError(default, null):HeapsModError->Void;
 
-    static var fs(default, null):HeapsModFS;
-
     public static function init(?config:HeapsModConfig)
     {
         if (initialized) return;
@@ -67,7 +65,7 @@ class HeapsMod
         HeapsScript.extensions = config.scriptExts ?? DEFAULT_SCRIPT_EXTS;
         #end
 
-        Res.loader = new Loader(fs = new HeapsModFS(Res.loader.fs));
+        Res.loader = new Loader(new HeapsModFS(Res.loader.fs));
 
         for (mod in config.mods) enableMod(mod);
 
@@ -76,9 +74,9 @@ class HeapsMod
 
     public static function enableMod(mod:String):Mod
     {
-        if (!initialized || !fs.hasMeta(mod) || hasEnabledMod(mod)) return null;
+        if (!initialized || !HeapsModFS.instance.hasMeta(mod) || hasEnabledMod(mod)) return null;
 
-        var mod:Mod = new Mod(fs.getMeta(mod));
+        var mod:Mod = new Mod(HeapsModFS.instance.getMeta(mod));
         var missing:Array<String> = Dependency.getMissingDependencies(mod.meta);
 
         if (missing.length > 0 && !config.skipDependencies)
@@ -128,14 +126,14 @@ class HeapsMod
 
         for (mod in Res.loader.dir(''))
         {
-            if (fs.getMeta(mod.name) == null)
+            if (HeapsModFS.instance.getMeta(mod.name) == null)
             {
                 if (mod.entry.isDirectory) error(WARNING, MOD_MISSING_META, 'Mod ${mod.name} lacks metadata');
 
                 continue;
             }
             
-            result.push(fs.getMeta(mod.name));
+            result.push(HeapsModFS.instance.getMeta(mod.name));
         }
 
         return Dependency.sortByDependencies(result);
@@ -185,10 +183,12 @@ class HeapsMod
 
         // Dispose the modding filesystem
         // Reuse the original filesystem
-        Res.loader = new Loader(fs.baseFS);
+        Res.loader = new Loader(HeapsModFS.baseFS);
 
-        fs.dispose();
-        fs = null;
+        HeapsModFS.instance.fs.remove(HeapsModFS.baseFS);
+
+        HeapsModFS.instance.dispose();
+        HeapsModFS.instance = null;
 
         error(INFO, HEAPSMOD_DISABLED, 'HeapsMod disabled');
     }
@@ -205,6 +205,6 @@ class HeapsMod
         for (mod in mods)
             mod.clearCache();
 
-        fs.clearCache();
+        HeapsModFS.modFS.clearCache();
     }
 }

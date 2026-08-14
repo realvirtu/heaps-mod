@@ -39,6 +39,8 @@ class Mod
         
         fs = new ModFS(mod);
 
+        HeapsModFS.instance.fs.insert(0, fs);
+
         #if hxscript
         if (hasPreprocessor) HeapsScript.setPreprocessor(preprocessor, '1');
         #end
@@ -51,6 +53,8 @@ class Mod
 
     public function dispose()
     {
+        HeapsModFS.instance.fs.remove(fs);
+
         clearCache();
 
         fs.dispose();

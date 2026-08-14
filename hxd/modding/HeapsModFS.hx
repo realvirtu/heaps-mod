@@ -5,40 +5,36 @@ import haxe.io.Path;
 import haxe.Json;
 import hxd.fs.FileSystem;
 import hxd.fs.LocalFileSystem;
+import hxd.fs.MultiFileSystem;
 import hxd.modding.mod.Mod;
 
 using Lambda;
 using StringTools;
 
-class HeapsModFS extends LocalFileSystem
+class HeapsModFS extends MultiFileSystem
 {
-    public final baseFS:FileSystem;
+    public static var instance:HeapsModFS;
+    public static var modFS:LocalFileSystem;
+    public static var baseFS:FileSystem;
 
-    public function new(baseFS:FileSystem)
+    public function new(fs:FileSystem)
     {
-        super(HeapsMod.config.modRoot, null);
+        instance = this;
+        modFS = new LocalFileSystem(HeapsMod.config.modRoot, null);
+        baseFS = fs;
 
-        this.baseFS = baseFS;
+        super([modFS, baseFS]);
     }
-
-    //
-    // MODDING
-    //
 
     override function dir(path:String):Array<FileEntry>
     {
-        var result:Array<FileEntry> = baseFS.dir(path);
-        
-        for (entry in super.dir(path))
-        {
-            if (result.exists(file -> return file.path == entry.path)) continue;
+        var result:Array<FileEntry> = [];
 
-            result.push(entry);
-        }
-
-        for (mod in HeapsMod.getEnabledMods())
+        for (i in 0...fs.length)
         {
-            for (entry in mod.fs.dir(path))
+            var fs:FileSystem = fs[fs.length - i - 1];
+
+            for (entry in try fs.dir(path) catch (e) [])
             {
                 var ogEntry:FileEntry = result.find(file -> return file.path == entry.path);
 
@@ -57,38 +53,13 @@ class HeapsModFS extends LocalFileSystem
         return result;
     }
 
-    override function get(path:String):LocalEntry
-    {
-        var mods:Array<Mod> = HeapsMod.getEnabledMods();
-
-        for (i in 0...mods.length)
-        {
-            var mod:Mod = mods[mods.length - i - 1];
-
-            if (mod.fs.exists(path)) return mod.fs.get(path);
-        }
-
-        return cast baseFS.get(path);
-    }
-
-    override function exists(path:String):Bool
-    {
-        if (HeapsMod.getEnabledMods().exists(mod -> return mod.fs.exists(path))) return true;
-
-        return baseFS.exists(path);
-    }
-
-    //
-    // META
-    //
-
     public function getMeta(mod:String):ModMeta
     {
         var meta:ModMeta = null;
 
         try
         {
-            var text:String = super.get(getMetaPath(mod)).getText();
+            var text:String = modFS.get(getMetaPath(mod)).getText();
 
             meta = Json.parse(text);
 
@@ -110,7 +81,7 @@ class HeapsModFS extends LocalFileSystem
 
     public function hasMeta(mod:String):Bool
     {
-        return super.exists(getMetaPath(mod));
+        return modFS.exists(getMetaPath(mod));
     }
 
     public function getMetaPath(mod:String):String
