@@ -6,7 +6,6 @@ import hxd.fs.LocalFileSystem;
 import hxd.fs.MultiFileSystem;
 
 using Lambda;
-using StringTools;
 
 class HeapsModFS extends MultiFileSystem
 {
