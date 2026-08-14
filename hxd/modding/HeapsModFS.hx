@@ -10,12 +10,14 @@ using Lambda;
 class HeapsModFS extends MultiFileSystem
 {
     public static var instance:HeapsModFS;
+    
     public static var modFS:LocalFileSystem;
     public static var baseFS:FileSystem;
 
     public function new(fs:FileSystem)
     {
         instance = this;
+
         modFS = new LocalFileSystem(HeapsMod.config.modRoot, null);
         baseFS = fs;
 
