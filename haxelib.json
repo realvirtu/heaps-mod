@@ -2,7 +2,7 @@
     "name": "heaps-mod",
     "url": "https://github.com/realvirtu/heaps-mod",
     "license": "MIT",
-    "description": "Mod support for Heaps",
+    "description": "Modding framework for the Heaps game engine",
     "version": "1.0.0",
     "releasenote": "Initial release.",
     "contributors": ["virtu"],
