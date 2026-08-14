@@ -206,7 +206,7 @@ class HeapsMod
 
     public static function error(code:ErrorCode, type:ErrorType, message:String)
     {
-        if (onError != null) onError(new HeapsModError(code, type, message));
+        if (onError != null) onError(HeapsModError.get(code, type, message));
     }
 
     public static function clearCache()
