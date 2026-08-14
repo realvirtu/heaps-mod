@@ -36,8 +36,8 @@ class HeapsMod
     public static var initialized(default, null):Bool;
     public static var config(default, null):HeapsModConfig;
 
-    static var mods(default, null):Array<Mod>;
     static var onError(default, null):HeapsModError->Void;
+    static var mods(default, null):Array<Mod>;
 
     public static function init(?config:HeapsModConfig)
     {
@@ -52,14 +52,14 @@ class HeapsMod
         config.skipDependencyErrors ??= false;
         config.mods ??= [];
 
-        #if hxscript
-        HeapsScript.extensions = config.scriptExts ?? DEFAULT_SCRIPT_EXTS;
-        #end
+        onError = config.onError;
+        mods = [];
 
         HeapsMod.config = config;
 
-        mods = [];
-        onError = config.onError;
+        #if hxscript
+        HeapsScript.extensions = config.scriptExts ?? DEFAULT_SCRIPT_EXTS;
+        #end
 
         Res.loader = new Loader(new HeapsModFS(Res.loader.fs));
 
