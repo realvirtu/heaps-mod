@@ -99,10 +99,7 @@ class HeapsModFS extends LocalFileSystem
             meta.description ??= '';
             meta.dependencies ??= [];
         }
-        catch (e)
-        {
-            return null;
-        }
+        catch (e) return null;
         
         if (meta.id == null) HeapsMod.error(WARNING, MOD_MISSING_ID, 'Mod $mod is missing "id"');
         if (meta.version == null) HeapsMod.error(WARNING, MOD_MISSING_MOD_VERSION, 'Mod $mod is missing "version"');
