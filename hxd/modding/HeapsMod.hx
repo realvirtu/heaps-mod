@@ -65,9 +65,9 @@ class HeapsMod
 
         Res.loader = new Loader(new HeapsModFS(Res.loader.fs));
 
-        enableMods(config.mods);
-
         error(INFO, HEAPSMOD_INITIALIZED, 'HeapsMod initialized');
+
+        enableMods(config.mods);
     }
 
     public static function enableMod(mod:String)
