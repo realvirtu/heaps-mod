@@ -30,21 +30,11 @@ class HeapsModFS extends MultiFileSystem
     {
         var result:Array<FileEntry> = [];
 
-        for (i in 0...fs.length)
+        for (fs in fs)
         {
-            var fs:FileSystem = fs[fs.length - i - 1];
-
             for (entry in try fs.dir(path) catch (e) [])
             {
-                var ogEntry:FileEntry = result.find(file -> return file.path == entry.path);
-
-                if (ogEntry != null)
-                {
-                    result.insert(result.indexOf(ogEntry), entry);
-                    result.remove(ogEntry);
-
-                    continue;
-                }
+                if (result.exists(file -> return file.path == entry.path)) continue;
 
                 result.push(entry);
             }
