@@ -1,6 +1,6 @@
 {
-    "name": "heaps-mod",
-    "url": "https://github.com/realvirtu/heaps-mod",
+    "name": "heapsmod",
+    "url": "https://github.com/realvirtu/heapsmod",
     "license": "MIT",
     "description": "Modding framework for the Heaps game engine",
     "version": "1.0.0",

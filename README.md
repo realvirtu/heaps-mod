@@ -4,8 +4,8 @@ HeapsMod is a modding framework designed specifically for the [Heaps](https://he
 
 ## Installation
 
-- Run `haxelib git heaps-mod https://github.com/realvirtu/heaps-mod`.
-- Add `-lib heaps-mod` to your hxml.
+- Run `haxelib git heapsmod https://github.com/realvirtu/heapsmod`.
+- Add `-lib heapsmod` to your hxml.
 
 ## Usage
 
