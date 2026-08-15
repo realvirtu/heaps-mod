@@ -87,6 +87,10 @@ class HeapsMod
         for (mod in dirs)
         {
             var meta:ModData = ModUtil.getMeta(mod, false);
+
+            if (!ModUtil.isCompatible(meta)) continue;
+
+            // Missing dependency check
             var missing:Array<String> = DependencyUtil.getMissingDependencies(meta);
 
             if (missing.length > 0 && !config.skipDependencies)
@@ -98,7 +102,7 @@ class HeapsMod
                 if (!skipErrors) continue;
             }
 
-            if (meta == null || hasEnabledMod(mod)) continue;
+            if (hasEnabledMod(mod)) continue;
 
             mods.push(new Mod(meta));
 

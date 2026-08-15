@@ -29,7 +29,7 @@ class DependencyUtil
         {
             var meta:ModData = mods.find(mod -> return mod.id == id);
 
-            if (!ModUtil.isCompatible(meta) || result.contains(meta)) return;
+            if (meta == null || result.contains(meta)) return;
 
             checked.push(id);
 
