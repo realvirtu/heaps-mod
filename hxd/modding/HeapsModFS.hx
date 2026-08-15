@@ -40,4 +40,18 @@ class HeapsModFS extends MultiFileSystem
 
         return result;
     }
+
+    override function dispose()
+    {
+        fs.remove(baseFS);
+        
+        modFS.dispose();
+        modFS = null;
+        
+        baseFS = null;
+
+        instance = null;
+
+        super.dispose();
+    }
 }

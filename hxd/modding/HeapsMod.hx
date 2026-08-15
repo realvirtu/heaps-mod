@@ -193,21 +193,13 @@ class HeapsMod
         clearCache();
 
         initialized = false;
-
         mods = null;
 
         // Dispose the modding filesystem
         // Reuse the original filesystem
         Res.loader = new Loader(HeapsModFS.baseFS);
 
-        HeapsModFS.instance.fs.remove(HeapsModFS.baseFS);
         HeapsModFS.instance.dispose();
-        HeapsModFS.instance = null;
-
-        HeapsModFS.modFS.dispose();
-        HeapsModFS.modFS = null;
-
-        HeapsModFS.baseFS = null;
 
         error(INFO, HEAPSMOD_DISABLED, 'HeapsMod disabled');
     }
