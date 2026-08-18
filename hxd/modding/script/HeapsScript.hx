@@ -44,7 +44,7 @@ class HeapsScript
                 if (type is ScriptedClass)
                 {
                     var cls:ScriptedClass = cast type;
-                    var native:Dynamic = cls.instanceClass;
+                    var native:Dynamic = try { cls.instanceClass; } catch(e) null;
 
                     while (native != null)
                     {
@@ -67,16 +67,7 @@ class HeapsScript
     {
         if (!HeapsMod.initialized || cls == null) return null;
 
-        try
-        {
-            return cls.typeCreateInstance(args);
-        }
-        catch (e)
-        {
-            HeapsMod.error(ERROR, SCRIPT_PROGRAM_ERROR, e.message);
-
-            return null;
-        }
+        return try { cls.typeCreateInstance(args); } catch (e) null;
     }
 
     public static function initClassByName(name:String, args:Array<Dynamic>):Dynamic
